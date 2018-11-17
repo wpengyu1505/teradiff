@@ -1,5 +1,6 @@
 package io.rainbow6.teradiff
 
+import io.rainbow6.teradiff.expression.ExpressionBuilder
 import org.junit.Test
 import junit.framework.TestCase
 import org.apache.spark.SparkConf
@@ -41,5 +42,12 @@ class TeradiffTest extends TestCase {
     val output = compare.compare()
 
     output.collect().foreach(println)
+  }
+
+  @Test
+  def testExpression() = {
+    val builder = new ExpressionBuilder(null)
+    val fields = "time,symbol,sequence,price"
+    assertEquals("concat_ws('%s',time,symbol,sequence,price) as key".format('\001'), builder.getExpression(fields, "key"))
   }
 }
