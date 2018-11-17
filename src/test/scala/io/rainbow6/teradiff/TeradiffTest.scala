@@ -18,6 +18,9 @@ class TeradiffTest extends TestCase {
     val conf = new SparkConf().setAppName("TeraDiff").setMaster("local")
     val spark = SparkSession.builder.config(conf).getOrCreate()
 
+    // Low partition for local
+    spark.sql("set spark.sql.shuffle.partitions=1")
+
     val schema = new StructType()
       .add(StructField("id", StringType, true))
       .add(StructField("col1", StringType, true))
@@ -35,13 +38,16 @@ class TeradiffTest extends TestCase {
       .load("src/test/resources/data2.txt")
 
     val keyExpr1 = "id as key"
-    val valueExpr1 = "concat_ws(',', col1, col2, col3) as value"
+    val valueExpr1 = "concat_ws('%s', col1, col2, col3) as value".format("\001")
 
     val compare = new TeraCompare(spark, df1, (keyExpr1, valueExpr1), df2, (keyExpr1, valueExpr1))
 
     val output = compare.compare()
 
-    output.collect().foreach(println)
+    output._1.collect().foreach(println)
+    println("LHS: %s".format(output._2.value))
+    println("RHS: %s".format(output._3.value))
+    println("diff: %s".format(output._4.value))
   }
 
   @Test

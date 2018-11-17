@@ -53,26 +53,29 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
       } else {
 
         val leftCols = StringUtils.splitPreserveAllTokens(left.value, Constants.delimiter)
-        val rightCols = StringUtils.splitPreserveAllTokens(left.value, Constants.delimiter)
+        val rightCols = StringUtils.splitPreserveAllTokens(right.value, Constants.delimiter)
 
+        var isDiff = false
         val sb = new StringBuilder()
 
         for (i <- 0 to leftCols.length - 1) {
           if (leftCols(i) != rightCols(i)) {
-            sb.append("[%s: (%s, %s)]".format(i, leftCols(i), rightCols(i)))
-            if (i < leftCols.length - 1) {
-              sb.append(", ")
-            }
+            isDiff = true
+            sb.append("[%s: (%s, %s)],".format(i, leftCols(i), rightCols(i)))
           }
         }
 
-        list.append(ComparisonResult(left.key, sb.toString(), "diff"))
+        if (isDiff) {
+          diffAccumulator.add(1)
+          sb.setLength(sb.length - 1)
+          list.append(ComparisonResult(left.key, sb.toString(), "diff"))
+        }
       }
 
       list.toList
     })
 
-    out
+    (out, leftAccumulator, rightAccumulator, diffAccumulator)
   }
 
 }
