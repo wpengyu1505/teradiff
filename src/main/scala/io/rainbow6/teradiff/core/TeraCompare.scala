@@ -21,8 +21,16 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
       val left = v._1
       val right = v._2
 
-      println("Left: %s, right: %s".format(left.value, right.value))
-      left.value + "---" + right.value
+      var leftString = "[none]"
+      var rightString = "[none]"
+      if (left != null) {
+        leftString = left.value
+      }
+      if (right != null) {
+        rightString = right.value
+      }
+
+      leftString + "---" + rightString
     })
 
     out
