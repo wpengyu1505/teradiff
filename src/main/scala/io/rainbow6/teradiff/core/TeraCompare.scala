@@ -6,6 +6,7 @@ import org.apache.commons.lang.StringUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.Accumulator
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.util.LongAccumulator
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashSet
@@ -76,6 +77,34 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
     })
 
     (out, leftAccumulator, rightAccumulator, diffAccumulator)
+  }
+
+  def analyzeResult(result:(Dataset[ComparisonResult], LongAccumulator, LongAccumulator, LongAccumulator)) = {
+
+    val dataset = result._1
+    dataset.persist()
+    //dataset.count()
+
+    val left = dataset.filter(v => v.recType == "left").take(100)
+    val right = dataset.filter(v => v.recType == "right").take(100)
+    val diff = dataset.filter(v => v.recType == "diff").take(100)
+
+    val leftOnlyCount = result._2.value
+    val rightOnlyCount = result._3.value
+    val diffCount = result._4.value
+
+    println("============= Stats =============")
+    println("LHS only:   %s".format(leftOnlyCount))
+    println("RHS only:   %s".format(rightOnlyCount))
+    println("Difference: %s".format(diffCount))
+    println("============= Left ==============")
+    left.foreach(println)
+
+    println("============= right =============")
+    right.foreach(println)
+
+    println("============= diff ==============")
+    diff.foreach(println)
   }
 
 }

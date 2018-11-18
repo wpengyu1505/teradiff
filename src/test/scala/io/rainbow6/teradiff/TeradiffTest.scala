@@ -14,7 +14,6 @@ class TeradiffTest extends TestCase {
 
   @Test
   def test(): Unit = {
-    println("start")
     val conf = new SparkConf().setAppName("TeraDiff").setMaster("local")
     val spark = SparkSession.builder.config(conf).getOrCreate()
 
@@ -44,10 +43,7 @@ class TeradiffTest extends TestCase {
 
     val output = compare.compare()
 
-    output._1.collect().foreach(println)
-    println("LHS: %s".format(output._2.value))
-    println("RHS: %s".format(output._3.value))
-    println("diff: %s".format(output._4.value))
+    compare.analyzeResult(output)
   }
 
   @Test
