@@ -16,7 +16,7 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
                         var rightKeyExpr:String,
                         var rightValueExpr:String,
                         var leftSchema:StructType,
-                        var rightSchema:StructType) {
+                        var rightSchema:StructType) extends Serializable {
 
   def this() {
     this(null, null, null, null, null, null, null, null, null, null)
@@ -118,6 +118,10 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
 
   def getRightSchema(): StructType = {
     rightSchema
+  }
+
+  def getColumnMap(): Map[Int, String] = {
+    leftValueMap
   }
 
 }

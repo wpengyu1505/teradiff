@@ -3,7 +3,7 @@ package io.rainbow6.teradiff.core
 import java.io.PrintWriter
 
 import io.rainbow6.teradiff.core.model.{ComparisonResult, KeyValue}
-import io.rainbow6.teradiff.expression.Constants
+import io.rainbow6.teradiff.expression.{Constants, ExpressionBuilder}
 import org.apache.commons.lang.StringUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.Accumulator
@@ -13,11 +13,13 @@ import org.apache.spark.util.LongAccumulator
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashSet
 
-class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, String), rightDf:DataFrame, rightExpr:(String, String)) {
+class TeraCompare (spark:SparkSession, expression:ExpressionBuilder, leftDf:DataFrame, rightDf:DataFrame) extends Serializable {
 
   import spark.implicits._
-  var leftData:Dataset[KeyValue] = leftDf.selectExpr(leftExpr._1, leftExpr._2).as[KeyValue]
-  var rightData:Dataset[KeyValue] = rightDf.selectExpr(rightExpr._1, rightExpr._2).as[KeyValue]
+  var leftData:Dataset[KeyValue] = leftDf.selectExpr(expression.getLeftKeyExpr(), expression.getLeftValueExpr()).as[KeyValue]
+  var rightData:Dataset[KeyValue] = rightDf.selectExpr(expression.getRightKeyExpr(), expression.getRightValueExpr()).as[KeyValue]
+
+  val exp = spark.sparkContext.broadcast(expression)
 
   def compare() = {
 
@@ -31,17 +33,14 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
 
       val list = new ListBuffer[ComparisonResult]
 
+      // Expression is broadcasted object
+      val expression = exp.value
+
+      // For result, use left mapping assuming both sides are same
+      val columnMap = expression.getColumnMap()
+
       val left = v._1
       val right = v._2
-
-      var leftString = "[none]"
-      var rightString = "[none]"
-      if (left != null) {
-        leftString = left.value
-      }
-      if (right != null) {
-        rightString = right.value
-      }
 
       if (left == null) {
 
@@ -64,7 +63,7 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
         for (i <- 0 to leftCols.length - 1) {
           if (leftCols(i) != rightCols(i)) {
             isDiff = true
-            sb.append("[%s: (%s, %s)],".format(i, leftCols(i), rightCols(i)))
+            sb.append("[%s: (%s, %s)],".format(columnMap.get(i).get, leftCols(i), rightCols(i)))
           }
         }
 
@@ -100,6 +99,7 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
     writeLine("RHS only:   %s".format(rightOnlyCount), writer)
     writeLine("Difference: %s".format(diffCount), writer)
     writeLine("============= Left side only ==============", writer)
+
     left.foreach(v => {
       writeLine(v.toString(), writer)
     })
@@ -117,6 +117,10 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
     if (writer != null) {
       writer.close()
     }
+  }
+
+  def formatResultKey(fields:String): String = {
+    fields.replaceAll(Constants.delimiter, "\\|")
   }
 
   def writeLine(line:String, writer:PrintWriter) = {

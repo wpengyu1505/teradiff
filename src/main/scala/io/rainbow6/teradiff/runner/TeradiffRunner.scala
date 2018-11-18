@@ -39,11 +39,6 @@ object TeradiffRunner {
     properties.load(new FileInputStream(propertyFilename))
     val expression = new ExpressionBuilder(properties)
 
-    val leftKeyExpr = expression.getLeftKeyExpr()
-    val leftValueExpr = expression.getLeftValueExpr()
-    val rightKeyExpr = expression.getRightKeyExpr()
-    val rightValueExpr = expression.getRightValueExpr()
-
     if (sourceType == "table") {
       df1 = spark.read.table(source1)
       df2 = spark.read.table(source2)
@@ -67,7 +62,7 @@ object TeradiffRunner {
     }
 
     // Execute spark job
-    val compare = new TeraCompare(spark, df1, (leftKeyExpr, leftValueExpr), df2, (rightKeyExpr, rightValueExpr))
+    val compare = new TeraCompare(spark, expression, df1, df2)
 
     val output = compare.compare()
 

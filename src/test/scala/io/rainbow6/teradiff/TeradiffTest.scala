@@ -36,10 +36,11 @@ class TeradiffTest extends TestCase {
       .schema(schema)
       .load("src/test/resources/data2.txt")
 
-    val keyExpr1 = "id as key"
-    val valueExpr1 = "concat_ws('%s', col1, col2, col3) as value".format("\001")
+    val keyExpr1 = "id"
+    val valueExpr1 = "col1,col2,col3"
 
-    val compare = new TeraCompare(spark, df1, (keyExpr1, valueExpr1), df2, (keyExpr1, valueExpr1))
+    val dummyExpression = new ExpressionBuilder(keyExpr1, valueExpr1, keyExpr1, valueExpr1)
+    val compare = new TeraCompare(spark, dummyExpression, df1, df2)
 
     val output = compare.compare()
 
