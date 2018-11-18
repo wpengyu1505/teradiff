@@ -4,14 +4,63 @@ import java.util.Properties
 
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
-class ExpressionBuilder(properties:Properties) {
+import scala.collection.immutable.Map
+import scala.collection.mutable.ListBuffer
 
-  val leftSchema = if (properties != null) properties.getProperty("LEFT_SCHEMA") else ""
-  val rightSchema = if (properties != null) properties.getProperty("RIGHT_SCHEMA") else ""
-  val leftKey = if (properties != null) properties.getProperty("LEFT_KEY") else ""
-  val rightKey = if (properties != null) properties.getProperty("RIGHT_KEY") else ""
-  val leftValue = if (properties != null) properties.getProperty("LEFT_VALUES") else ""
-  val rightValue = if (properties != null) properties.getProperty("RIGHT_VALUES") else ""
+class ExpressionBuilder(var leftKeyMap:Map[Int, String],
+                        var leftValueMap:Map[Int, String],
+                        var rightKeyMap:Map[Int, String],
+                        var rightValueMap:Map[Int, String],
+                        var leftKeyExpr:String,
+                        var leftValueExpr:String,
+                        var rightKeyExpr:String,
+                        var rightValueExpr:String,
+                        var leftSchema:StructType,
+                        var rightSchema:StructType) {
+
+  def this() {
+    this(null, null, null, null, null, null, null, null, null, null)
+  }
+
+  def this(properties:Properties) {
+    this(null, null, null, null, null, null, null, null, null, null)
+    val leftKey = properties.getProperty("LEFT_KEY")
+    val leftValue = properties.getProperty("LEFT_VALUES")
+    val rightKey = properties.getProperty("RIGHT_KEY")
+    val rightValue = properties.getProperty("RIGHT_VALUES")
+
+    // Field Mapping
+    leftKeyMap = getFieldMap(leftKey)
+    leftValueMap = getFieldMap(leftValue)
+    rightKeyMap = getFieldMap(rightKey)
+    rightValueMap = getFieldMap(rightValue)
+
+    // Expr
+    leftKeyExpr = getExpression(leftKey, "key")
+    leftValueExpr = getExpression(leftValue, "value")
+    rightKeyExpr = getExpression(rightKey, "key")
+    rightValueExpr = getExpression(rightValue, "value")
+
+    // Schema
+    leftSchema = getSchema(properties.getProperty("LEFT_SCHEMA"))
+    rightSchema = getSchema(properties.getProperty("RIGHT_SCHEMA"))
+  }
+
+  def this(leftKey:String, leftValue:String, rightKey:String, rightValue:String) {
+    this(null, null, null, null, null, null, null, null, null, null)
+
+    // Field Mapping
+    leftKeyMap = getFieldMap(leftKey)
+    leftValueMap = getFieldMap(leftValue)
+    rightKeyMap = getFieldMap(rightKey)
+    rightValueMap = getFieldMap(rightValue)
+
+    // Expr
+    leftKeyExpr = getExpression(leftKey, "key")
+    leftValueExpr = getExpression(leftValue, "value")
+    rightKeyExpr = getExpression(rightKey, "key")
+    rightValueExpr = getExpression(rightValue, "value")
+  }
 
   def getExpression(fieldList:String, columnName:String):String = {
 
@@ -27,6 +76,16 @@ class ExpressionBuilder(properties:Properties) {
     sb.toString()
   }
 
+  def getFieldMap(fieldList:String):Map[Int, String] = {
+
+    val list = new ListBuffer[(Int, String)]
+    val fields = fieldList.split(",")
+    for (i <- 0 to fields.length - 1) {
+      list.append((i, fields(i)))
+    }
+    list.toMap
+  }
+
   def getSchema(fieldList:String): StructType = {
 
     var schema = new StructType()
@@ -38,27 +97,27 @@ class ExpressionBuilder(properties:Properties) {
   }
 
   def getLeftKeyExpr(): String = {
-    getExpression(leftKey, "key")
+    leftKeyExpr
   }
 
   def getLeftValueExpr(): String = {
-    getExpression(leftValue, "value")
+    leftValueExpr
   }
 
   def getRightKeyExpr(): String = {
-    getExpression(rightKey, "key")
+    rightKeyExpr
   }
 
   def getRightValueExpr(): String = {
-    getExpression(rightValue, "value")
+    rightValueExpr
   }
 
   def getLeftSchema(): StructType = {
-    getSchema(leftSchema)
+    leftSchema
   }
 
   def getRightSchema(): StructType = {
-    getSchema(rightSchema)
+    rightSchema
   }
 
 }

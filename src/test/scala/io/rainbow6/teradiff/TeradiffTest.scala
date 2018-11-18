@@ -48,7 +48,7 @@ class TeradiffTest extends TestCase {
 
   @Test
   def testExpression() = {
-    val builder = new ExpressionBuilder(null)
+    val builder = new ExpressionBuilder()
     val fields = "time,symbol,sequence,price"
     assertEquals("concat_ws('%s',time,symbol,sequence,price) as key".format('\001'), builder.getExpression(fields, "key"))
   }
