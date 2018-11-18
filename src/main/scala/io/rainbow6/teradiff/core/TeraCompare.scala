@@ -1,4 +1,4 @@
-package wpy.graphlinker.core
+package io.rainbow6.teradiff.core
 
 import io.rainbow6.teradiff.core.model.{ComparisonResult, KeyValue}
 import io.rainbow6.teradiff.expression.Constants
