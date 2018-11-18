@@ -27,7 +27,7 @@ object TeradiffRunner {
     }
 
     val conf = new SparkConf().setAppName("TeraDiff")//.setMaster("local")
-    val spark = SparkSession.builder.config(conf).getOrCreate()
+    val spark = SparkSession.builder.config(conf).config("spark.sql.warehouse.dir", "/user/hive/warehouse/").enableHiveSupport().getOrCreate()
     spark.sql("set spark.sql.shuffle.partitions=%s".format(partitions))
 
     var df1 = null:DataFrame
