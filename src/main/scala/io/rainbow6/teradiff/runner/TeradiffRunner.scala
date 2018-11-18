@@ -26,7 +26,7 @@ object TeradiffRunner {
       partitions = args(4).toInt
     }
 
-    val conf = new SparkConf().setAppName("TeraDiff")//.setMaster("local")
+    val conf = new SparkConf().setAppName("TeraDiff").setMaster("local")
     val spark = SparkSession.builder.config(conf).getOrCreate()
     spark.sql("set spark.sql.shuffle.partitions=%s".format(partitions))
 

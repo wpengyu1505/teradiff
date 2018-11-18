@@ -6,12 +6,12 @@ import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
 class ExpressionBuilder(properties:Properties) {
 
-  val leftSchema = properties.getProperty("LEFT_SCHEMA")
-  val rightSchema = properties.getProperty("RIGHT_SCHEMA")
-  val leftKey = properties.getProperty("LEFT_KEY")
-  val rightKey = properties.getProperty("RIGHT_KEY")
-  val leftValue = properties.getProperty("LEFT_VALUES")
-  val rightValue = properties.getProperty("RIGHT_VALUES")
+  val leftSchema = if (properties != null) properties.getProperty("LEFT_SCHEMA") else ""
+  val rightSchema = if (properties != null) properties.getProperty("RIGHT_SCHEMA") else ""
+  val leftKey = if (properties != null) properties.getProperty("LEFT_KEY") else ""
+  val rightKey = if (properties != null) properties.getProperty("RIGHT_KEY") else ""
+  val leftValue = if (properties != null) properties.getProperty("LEFT_VALUES") else ""
+  val rightValue = if (properties != null) properties.getProperty("RIGHT_VALUES") else ""
 
   def getExpression(fieldList:String, columnName:String):String = {
 

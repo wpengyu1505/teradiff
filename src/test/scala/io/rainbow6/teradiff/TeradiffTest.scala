@@ -12,7 +12,7 @@ import wpy.graphlinker.core.TeraCompare;
 
 class TeradiffTest extends TestCase {
 
-  @Test
+  //@Test
   def test(): Unit = {
     val conf = new SparkConf().setAppName("TeraDiff").setMaster("local")
     val spark = SparkSession.builder.config(conf).getOrCreate()
