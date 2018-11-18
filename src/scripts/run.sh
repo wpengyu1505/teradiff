@@ -4,6 +4,8 @@ SOURCE_LEFT=tablename1
 SOURCE_RIGHT=tablename2
 SOURCE_TYPE=table
 #SOURCE_TYPE=csv
+PROPERTY_FILE=./teradiff.properties
+NUM_PARTITIONS=3000
 
 spark-submit --class io.rainbow6.teradiff.runner.TeradiffRunner \
     --conf spark.yarn.executor.memoryOverhead=8192 \
@@ -15,5 +17,5 @@ spark-submit --class io.rainbow6.teradiff.runner.TeradiffRunner \
     $SOURCE_LEFT \
     $SOURCE_LEFT \
     $SOURCE_TYPE \
-    path/to/teradiff.properties \
-    3000
+    $PROPERTY_FILE \
+    $NUM_PARTITIONS
