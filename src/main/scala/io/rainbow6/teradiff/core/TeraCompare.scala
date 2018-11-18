@@ -1,5 +1,7 @@
 package io.rainbow6.teradiff.core
 
+import java.io.PrintWriter
+
 import io.rainbow6.teradiff.core.model.{ComparisonResult, KeyValue}
 import io.rainbow6.teradiff.expression.Constants
 import org.apache.commons.lang.StringUtils
@@ -79,7 +81,7 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
     (out, leftAccumulator, rightAccumulator, diffAccumulator)
   }
 
-  def analyzeResult(result:(Dataset[ComparisonResult], LongAccumulator, LongAccumulator, LongAccumulator)) = {
+  def analyzeResult(result:(Dataset[ComparisonResult], LongAccumulator, LongAccumulator, LongAccumulator), writer:PrintWriter) = {
 
     val dataset = result._1
     dataset.persist()
@@ -93,18 +95,36 @@ class TeraCompare (spark:SparkSession, leftDf:DataFrame, leftExpr:(String, Strin
     val rightOnlyCount = result._3.value
     val diffCount = result._4.value
 
-    println("============= Stats =============")
-    println("LHS only:   %s".format(leftOnlyCount))
-    println("RHS only:   %s".format(rightOnlyCount))
-    println("Difference: %s".format(diffCount))
-    println("============= Left ==============")
-    left.foreach(println)
+    writeLine("============= Stats =============", writer)
+    writeLine("LHS only:   %s".format(leftOnlyCount), writer)
+    writeLine("RHS only:   %s".format(rightOnlyCount), writer)
+    writeLine("Difference: %s".format(diffCount), writer)
+    writeLine("============= Left side only ==============", writer)
+    left.foreach(v => {
+      writeLine(v.toString(), writer)
+    })
 
-    println("============= right =============")
-    right.foreach(println)
+    writeLine("============= Right side only =============", writer)
+    right.foreach(v => {
+      writeLine(v.toString(), writer)
+    })
 
-    println("============= diff ==============")
-    diff.foreach(println)
+    writeLine("============= Column differences ==============", writer)
+    diff.foreach(v => {
+      writeLine(v.toString(), writer)
+    })
+
+    if (writer != null) {
+      writer.close()
+    }
+  }
+
+  def writeLine(line:String, writer:PrintWriter) = {
+    if (writer != null) {
+      writer.println(line)
+    } else {
+      println(line)
+    }
   }
 
 }

@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 import org.junit.Assert._
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 import org.apache.spark.sql.Row
-import wpy.graphlinker.core.TeraCompare;
+import io.rainbow6.teradiff.core.TeraCompare;
 
 class TeradiffTest extends TestCase {
 
@@ -43,7 +43,7 @@ class TeradiffTest extends TestCase {
 
     val output = compare.compare()
 
-    compare.analyzeResult(output)
+    compare.analyzeResult(output, null)
   }
 
   @Test

@@ -1,29 +1,31 @@
 package io.rainbow6.teradiff.runner
 
 import java.io.FileInputStream
+import java.io.PrintWriter
 import java.util.Properties
 
 import io.rainbow6.teradiff.expression.ExpressionBuilder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.SparkConf
-import wpy.graphlinker.core.TeraCompare
+import io.rainbow6.teradiff.core.TeraCompare
 
 object TeradiffRunner {
 
   def main(args:Array[String]): Unit = {
 
-    if (args.length < 4) {
-      System.err.println("Arguments: <source1> <source2> <sourceType: table/csv> <property file path> [partitions]")
+    if (args.length < 5) {
+      System.err.println("Arguments: <source1> <source2> <sourceType: table/csv> <property file path> <result file path> [partitions]")
       System.exit(1)
     }
     val source1 = args(0)
     val source2 = args(1)
     val sourceType = args(2)
     val propertyFilename = args(3)
+    val outputFile = args(4)
     var partitions = 2000
 
-    if (args.length > 4) {
-      partitions = args(4).toInt
+    if (args.length > 5) {
+      partitions = args(5).toInt
     }
 
     val conf = new SparkConf().setAppName("TeraDiff")//.setMaster("local")
@@ -69,7 +71,8 @@ object TeradiffRunner {
 
     val output = compare.compare()
 
-    compare.analyzeResult(output)
+    val writer = new PrintWriter(outputFile)
+    compare.analyzeResult(output, writer)
 
   }
 }
