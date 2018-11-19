@@ -5,6 +5,7 @@ SOURCE_RIGHT=tablename2
 SOURCE_TYPE=table
 #SOURCE_TYPE=csv
 PROPERTY_FILE=./teradiff.properties
+OUTPUT_FILE=summary.txt
 NUM_PARTITIONS=3000
 
 spark-submit --class io.rainbow6.teradiff.runner.TeradiffRunner \
@@ -15,7 +16,8 @@ spark-submit --class io.rainbow6.teradiff.runner.TeradiffRunner \
     --master yarn-client \
     teradiff-1.0.0.jar \
     $SOURCE_LEFT \
-    $SOURCE_LEFT \
+    $SOURCE_RIGHT \
     $SOURCE_TYPE \
     $PROPERTY_FILE \
+    $OUTPUT_FILE \
     $NUM_PARTITIONS
