@@ -39,7 +39,7 @@ object TeradiffRunner {
     properties.load(new FileInputStream(propertyFilename))
     val expression = new ExpressionBuilder(properties)
 
-    if (sourceType == "table") {
+    if (sourceType == "hive") {
       df1 = spark.read.table(source1)
       df2 = spark.read.table(source2)
     } else if (sourceType == "csv") {
@@ -56,6 +56,22 @@ object TeradiffRunner {
         .option("header", false)
         .schema(rightSchema)
         .load(source2)
+    } else if (sourceType == "rdbms") {
+
+      val leftConnectionProperties = new Properties()
+      leftConnectionProperties.put("user", properties.getProperty("LEFT_USERNAME"))
+      leftConnectionProperties.put("password", properties.getProperty("LEFT_PASSWORD"))
+      leftConnectionProperties.setProperty("Driver", properties.getProperty("LEFT_DRIVER_CLASS"))
+      df1 = spark.read.jdbc(properties.getProperty("LEFT_CONNECTION"), source1, leftConnectionProperties)
+
+      val rightConnectionProperties = new Properties()
+      rightConnectionProperties.put("user", properties.getProperty("RIGHT_USERNAME"))
+      rightConnectionProperties.put("password", properties.getProperty("RIGHT_PASSWORD"))
+      rightConnectionProperties.setProperty("Driver", properties.getProperty("RIGHT_DRIVER_CLASS"))
+      df2 = spark.read.jdbc(properties.getProperty("RIGHT_CONNECTION"), source2, rightConnectionProperties)
+
+      //Class.forName(properties.getProperty("LEFT_DRIVER_CLASS"))
+
     } else {
       System.err.println("ERROR: Source type %s not supported".format(sourceType))
       System.exit(1)
