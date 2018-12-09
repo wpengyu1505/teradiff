@@ -16,14 +16,18 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
                         var rightKeyExpr:String,
                         var rightValueExpr:String,
                         var leftSchema:StructType,
-                        var rightSchema:StructType) extends Serializable {
+                        var rightSchema:StructType,
+                        var leftDelimiter:String,
+                        var rightDelimiter:String,
+                        var leftHeader:Boolean,
+                        var rightHeader:Boolean) extends Serializable {
 
   def this() {
-    this(null, null, null, null, null, null, null, null, null, null)
+    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
   }
 
   def this(properties:Properties) {
-    this(null, null, null, null, null, null, null, null, null, null)
+    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
     val leftKey = properties.getProperty("LEFT_KEY")
     val leftValue = properties.getProperty("LEFT_VALUES")
     val rightKey = properties.getProperty("RIGHT_KEY")
@@ -44,10 +48,33 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
     // Schema
     leftSchema = getSchema(properties.getProperty("LEFT_SCHEMA"))
     rightSchema = getSchema(properties.getProperty("RIGHT_SCHEMA"))
+
+    // Delimiter default is comma, only user can overwrite using properties
+    leftDelimiter = properties.getProperty("LEFT_DELIMITER")
+    if (leftDelimiter.trim.isEmpty) {
+      leftDelimiter = ","
+    }
+    rightDelimiter = properties.getProperty("RIGHT_DELIMITER")
+    if (rightDelimiter.trim.isEmpty) {
+      rightDelimiter = ","
+    }
+
+    if (properties.getProperty("LEFT_WITH_HEADER").toUpperCase == "Y") {
+      leftHeader = true
+    } else {
+      leftHeader = false
+    }
+
+    if (properties.getProperty("RIGHT_WITH_HEADER").toUpperCase == "Y") {
+      rightHeader = true
+    } else {
+      rightHeader = false
+    }
+
   }
 
   def this(leftKey:String, leftValue:String, rightKey:String, rightValue:String) {
-    this(null, null, null, null, null, null, null, null, null, null)
+    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
 
     // Field Mapping
     leftKeyMap = getFieldMap(leftKey)
@@ -122,6 +149,22 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
 
   def getColumnMap(): Map[Int, String] = {
     leftValueMap
+  }
+
+  def getLeftDelimiter(): String = {
+    leftDelimiter
+  }
+
+  def getRightDelimiter(): String = {
+    rightDelimiter
+  }
+
+  def leftWithHeader(): Boolean = {
+    leftHeader
+  }
+
+  def rightWithHeader(): Boolean = {
+    rightHeader
   }
 
 }

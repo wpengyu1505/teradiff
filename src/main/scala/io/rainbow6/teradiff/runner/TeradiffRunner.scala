@@ -28,7 +28,7 @@ object TeradiffRunner {
       partitions = args(5).toInt
     }
 
-    val conf = new SparkConf().setAppName("TeraDiff")//.setMaster("local")
+    val conf = new SparkConf().setAppName("TeraDiff").setMaster("local")
     val spark = SparkSession.builder.config(conf).config("spark.sql.warehouse.dir", "/user/hive/warehouse/").enableHiveSupport().getOrCreate()
     spark.sql("set spark.sql.shuffle.partitions=%s".format(partitions))
 
@@ -46,16 +46,36 @@ object TeradiffRunner {
 
       val leftSchema = expression.getLeftSchema()
       val rightSchema = expression.getRightSchema()
+      val leftDelimiter = expression.getLeftDelimiter()
+      val rightDelimiter = expression.getRightDelimiter()
 
-      df1 = spark.read.format("com.databricks.spark.csv")
-        .option("header", false)
-        .schema(leftSchema)
-        .load(source1)
+      if (expression.leftWithHeader()) {
+        df1 = spark.read.format("com.databricks.spark.csv")
+          .option("header", true)
+          .option("delimiter", leftDelimiter)
+          .load(source1)
+      } else {
+        df1 = spark.read.format("com.databricks.spark.csv")
+          .option("header", false)
+          .option("delimiter", leftDelimiter)
+          .schema(leftSchema)
+          .load(source1)
+      }
 
-      df2 = spark.read.format("com.databricks.spark.csv")
-        .option("header", false)
-        .schema(rightSchema)
-        .load(source2)
+      if (expression.rightWithHeader()) {
+        df2 = spark.read.format("com.databricks.spark.csv")
+          .option("header", true)
+          .option("delimiter", rightDelimiter)
+          .load(source2)
+      } else {
+        df2 = spark.read.format("com.databricks.spark.csv")
+          .option("header", false)
+          .option("delimiter", rightDelimiter)
+          .schema(rightSchema)
+          .load(source2)
+      }
+
+
     } else if (sourceType == "rdbms") {
 
       val leftConnectionProperties = new Properties()
