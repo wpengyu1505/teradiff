@@ -13,8 +13,8 @@ object TeradiffRunner {
 
   def main(args:Array[String]): Unit = {
 
-    if (args.length < 5) {
-      System.err.println("Arguments: <source1> <source2> <sourceType: table/csv> <property file path> <result file path> [partitions]")
+    if (args.length < 6) {
+      System.err.println("Arguments: <source1> <source2> <sourceType: table/csv> <property file path> <result file path> <run mode> [partitions]")
       System.exit(1)
     }
     val source1 = args(0)
@@ -22,13 +22,17 @@ object TeradiffRunner {
     val sourceType = args(2)
     val propertyFilename = args(3)
     val outputFile = args(4)
+    val runMode = args(5)
     var partitions = 2000
 
-    if (args.length > 5) {
-      partitions = args(5).toInt
+    if (args.length > 6) {
+      partitions = args(6).toInt
     }
 
-    val conf = new SparkConf().setAppName("TeraDiff").setMaster("local")
+    val conf = new SparkConf().setAppName("TeraDiff")
+    if (runMode == "local") {
+      conf.setMaster("local")
+    }
     val spark = SparkSession.builder.config(conf).config("spark.sql.warehouse.dir", "/user/hive/warehouse/").enableHiveSupport().getOrCreate()
     spark.sql("set spark.sql.shuffle.partitions=%s".format(partitions))
 

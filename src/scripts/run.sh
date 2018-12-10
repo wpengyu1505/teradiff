@@ -20,4 +20,5 @@ spark-submit --class io.rainbow6.teradiff.runner.TeradiffRunner \
     $SOURCE_TYPE \
     $PROPERTY_FILE \
     $OUTPUT_FILE \
+    cluster \
     $NUM_PARTITIONS
