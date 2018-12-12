@@ -104,6 +104,8 @@ object TeradiffRunner {
       System.exit(1)
     }
 
+    expression.analyze(df1, df2)
+
     // Execute spark job
     val compare = new TeraCompare(spark, expression, df1, df2)
 

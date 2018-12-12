@@ -2,12 +2,14 @@ package io.rainbow6.teradiff.expression
 
 import java.util.Properties
 
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
 import scala.collection.immutable.Map
 import scala.collection.mutable.ListBuffer
 
-class ExpressionBuilder(var leftKeyMap:Map[Int, String],
+class ExpressionBuilder(var props:Properties,
+                        var leftKeyMap:Map[Int, String],
                         var leftValueMap:Map[Int, String],
                         var rightKeyMap:Map[Int, String],
                         var rightValueMap:Map[Int, String],
@@ -23,27 +25,28 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
                         var rightHeader:Boolean) extends Serializable {
 
   def this() {
-    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
+    this(null, null, null, null, null, null, null, null, null, null, null, null, null, false, false)
   }
 
   def this(properties:Properties) {
-    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
-    val leftKey = properties.getProperty("LEFT_KEY")
-    val leftValue = properties.getProperty("LEFT_VALUES")
-    val rightKey = properties.getProperty("RIGHT_KEY")
-    val rightValue = properties.getProperty("RIGHT_VALUES")
-
-    // Field Mapping
-    leftKeyMap = getFieldMap(leftKey)
-    leftValueMap = getFieldMap(leftValue)
-    rightKeyMap = getFieldMap(rightKey)
-    rightValueMap = getFieldMap(rightValue)
-
-    // Expr
-    leftKeyExpr = getExpression(leftKey, "key")
-    leftValueExpr = getExpression(leftValue, "value")
-    rightKeyExpr = getExpression(rightKey, "key")
-    rightValueExpr = getExpression(rightValue, "value")
+    this(null, null, null, null, null, null, null, null, null, null, null, null, null, false, false)
+    props = properties
+//    val leftKey = properties.getProperty("LEFT_KEY")
+//    val leftValue = properties.getProperty("LEFT_VALUES")
+//    val rightKey = properties.getProperty("RIGHT_KEY")
+//    val rightValue = properties.getProperty("RIGHT_VALUES")
+//
+//    // Field Mapping
+//    leftKeyMap = getFieldMap(leftKey)
+//    leftValueMap = getFieldMap(leftValue)
+//    rightKeyMap = getFieldMap(rightKey)
+//    rightValueMap = getFieldMap(rightValue)
+//
+//    // Expr
+//    leftKeyExpr = getExpression(leftKey, "key")
+//    leftValueExpr = getExpression(leftValue, "value")
+//    rightKeyExpr = getExpression(rightKey, "key")
+//    rightValueExpr = getExpression(rightValue, "value")
 
     // Schema
     leftSchema = getSchema(properties.getProperty("LEFT_SCHEMA"))
@@ -74,7 +77,7 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
   }
 
   def this(leftKey:String, leftValue:String, rightKey:String, rightValue:String) {
-    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
+    this(null, null, null, null, null, null, null, null, null, null, null, null, null, false, false)
 
     // Field Mapping
     leftKeyMap = getFieldMap(leftKey)
@@ -121,6 +124,42 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
     })
 
     schema
+  }
+
+  def schemaToString(schema:StructType):String = {
+    schema.fieldNames.mkString(",")
+  }
+
+  def analyze(df1:DataFrame, df2:DataFrame) = {
+    var leftKey = props.getProperty("LEFT_KEY")
+    var leftValue = props.getProperty("LEFT_VALUES")
+    var rightKey = props.getProperty("RIGHT_KEY")
+    var rightValue = props.getProperty("RIGHT_VALUES")
+
+    if (leftKey == null || leftKey.isEmpty) {
+      leftKey = schemaToString(df1.schema)
+    }
+    if (leftValue == null || leftValue.isEmpty) {
+      leftValue = schemaToString(df1.schema)
+    }
+    if (rightKey == null || rightKey.isEmpty) {
+      rightKey = schemaToString(df2.schema)
+    }
+    if (rightValue == null || rightValue.isEmpty) {
+      rightValue = schemaToString(df2.schema)
+    }
+
+    // Field Mapping
+    leftKeyMap = getFieldMap(leftKey)
+    leftValueMap = getFieldMap(leftValue)
+    rightKeyMap = getFieldMap(rightKey)
+    rightValueMap = getFieldMap(rightValue)
+
+    // Expr
+    leftKeyExpr = getExpression(leftKey, "key")
+    leftValueExpr = getExpression(leftValue, "value")
+    rightKeyExpr = getExpression(rightKey, "key")
+    rightValueExpr = getExpression(rightValue, "value")
   }
 
   def getLeftKeyExpr(): String = {
