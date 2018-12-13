@@ -23,6 +23,8 @@ class E2ETest extends TestCase {
       "--leftValue", "id,col1,col2,col3",
       "--rightKey", "id",
       "--rightValue", "id,col1,col2,col3",
+      "--leftIgnores", "col1,col2",
+      "--rightIgnores", "col1,col2",
       "--rightWithHeader",
       "--leftWithHeader"
     )

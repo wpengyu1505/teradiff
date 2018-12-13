@@ -16,6 +16,8 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
                         var leftValueExpr:String,
                         var rightKeyExpr:String,
                         var rightValueExpr:String,
+                        var leftIgnores:String,
+                        var rightIgnores:String,
                         var leftSchema:StructType,
                         var rightSchema:StructType,
                         var leftDelimiter:String,
@@ -24,20 +26,26 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
                         var rightHeader:Boolean) extends Serializable {
 
   def this() {
-    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
+    this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, false)
   }
 
   def this(leftKeyExpr:String,
            leftValueExpr:String,
            rightKeyExpr:String,
            rightValueExpr:String,
+           leftIgnores:String,
+           rightIgnores:String,
            leftDelimiter:String,
            rightDelimiter:String,
            leftHeader:Boolean,
            rightHeader:Boolean) {
     this(null, null, null, null,
-      leftKeyExpr, leftValueExpr, rightKeyExpr, rightValueExpr, null, null,
+      leftKeyExpr, leftValueExpr, rightKeyExpr, rightValueExpr,
+      leftIgnores, rightIgnores, null, null,
       leftDelimiter, rightDelimiter, leftHeader, rightHeader)
+
+    this.leftIgnores = leftIgnores
+    this.rightIgnores = rightIgnores
 
     // Delimiter default is comma, only user can overwrite using properties
     this.leftDelimiter = leftDelimiter
@@ -47,43 +55,65 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
     this.rightHeader = rightHeader
   }
 
-  def this(leftKey:String, leftValue:String, rightKey:String, rightValue:String) {
-    this(null, null, null, null, null, null, null, null, null, null, null, null, false, false)
+//  def this(leftKey:String, leftValue:String, rightKey:String, rightValue:String) {
+//    this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, false)
+//
+//    // Field Mapping
+//    leftKeyMap = getFieldMap(leftKey, leftIgnores)
+//    leftValueMap = getFieldMap(leftValue, leftIgnores)
+//    rightKeyMap = getFieldMap(rightKey, rightIgnores)
+//    rightValueMap = getFieldMap(rightValue, rightIgnores)
+//
+//    // Expr
+//    leftKeyExpr = getExpression(leftKey, leftIgnores, "key")
+//    leftValueExpr = getExpression(leftValue, leftIgnores, "value")
+//    rightKeyExpr = getExpression(rightKey, rightIgnores, "key")
+//    rightValueExpr = getExpression(rightValue, rightIgnores, "value")
+//  }
 
-    // Field Mapping
-    leftKeyMap = getFieldMap(leftKey)
-    leftValueMap = getFieldMap(leftValue)
-    rightKeyMap = getFieldMap(rightKey)
-    rightValueMap = getFieldMap(rightValue)
+//  def getExpression(fieldList:String, columnName:String):String = {
+//
+//    val cols = fieldList.split(",")
+//
+//    val sb = new StringBuilder()
+//    sb.append("concat_ws('%s'".format(Constants.delimiter))
+//    cols.foreach(v => {
+//      sb.append(",%s".format(v))
+//    })
+//    sb.append(") as %s".format(columnName))
+//
+//    sb.toString()
+//  }
 
-    // Expr
-    leftKeyExpr = getExpression(leftKey, "key")
-    leftValueExpr = getExpression(leftValue, "value")
-    rightKeyExpr = getExpression(rightKey, "key")
-    rightValueExpr = getExpression(rightValue, "value")
-  }
-
-  def getExpression(fieldList:String, columnName:String):String = {
+  def getExpression(fieldList:String, ignoreList:String, columnName:String):String = {
 
     val cols = fieldList.split(",")
+    val ignores = ignoreList.split(",")
 
     val sb = new StringBuilder()
     sb.append("concat_ws('%s'".format(Constants.delimiter))
     cols.foreach(v => {
-      sb.append(",%s".format(v))
+      if (!ignores.contains(v)) {
+        sb.append(",%s".format(v))
+      }
     })
     sb.append(") as %s".format(columnName))
 
     sb.toString()
   }
 
-  def getFieldMap(fieldList:String):Map[Int, String] = {
+  def getFieldMap(fieldList:String, ignoreList:String):Map[Int, String] = {
 
     val list = new ListBuffer[(Int, String)]
     val fields = fieldList.split(",")
-    for (i <- 0 to fields.length - 1) {
-      list.append((i, fields(i)))
-    }
+    val ignores = ignoreList.split(",")
+    var index = 0
+    fields.foreach(v => {
+      if (!ignores.contains(v)) {
+        list.append((index, v))
+        index += 1
+      }
+    })
     list.toMap
   }
 
@@ -120,16 +150,25 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
     }
 
     // Field Mapping
-    leftKeyMap = getFieldMap(leftKeyExpr)
-    leftValueMap = getFieldMap(leftValueExpr)
-    rightKeyMap = getFieldMap(rightKeyExpr)
-    rightValueMap = getFieldMap(rightValueExpr)
+    leftKeyMap = getFieldMap(leftKeyExpr, leftIgnores)
+    leftValueMap = getFieldMap(leftValueExpr, leftIgnores)
+    rightKeyMap = getFieldMap(rightKeyExpr, rightIgnores)
+    rightValueMap = getFieldMap(rightValueExpr, rightIgnores)
 
     // Expr
-    leftKeyExpr = getExpression(leftKeyExpr, "key")
-    leftValueExpr = getExpression(leftValueExpr, "value")
-    rightKeyExpr = getExpression(rightKeyExpr, "key")
-    rightValueExpr = getExpression(rightValueExpr, "value")
+    leftKeyExpr = getExpression(leftKeyExpr, leftIgnores, "key")
+    leftValueExpr = getExpression(leftValueExpr, leftIgnores, "value")
+    rightKeyExpr = getExpression(rightKeyExpr, rightIgnores, "key")
+    rightValueExpr = getExpression(rightValueExpr, rightIgnores, "value")
+
+    println("=======================================")
+    println("leftKey: %s".format(leftKeyExpr))
+    println("leftValue: %s".format(leftValueExpr))
+    println("rightKey: %s".format(rightKeyExpr))
+    println("rightValue: %s".format(rightValueExpr))
+    println("leftIgnores: %s".format(leftIgnores))
+    println("rightIgnores %s".format(rightIgnores))
+    println("=======================================")
   }
 
   def getLeftKeyExpr(): String = {

@@ -39,7 +39,9 @@ class TeradiffTest extends TestCase {
     val keyExpr1 = "id"
     val valueExpr1 = "col1,col2,col3"
 
-    val dummyExpression = new ExpressionBuilder(keyExpr1, valueExpr1, keyExpr1, valueExpr1)
+    val dummyExpression = new ExpressionBuilder(keyExpr1, valueExpr1, keyExpr1, valueExpr1, "", "", ",", ",", false, false)
+
+    dummyExpression.analyze(df1, df2)
     val compare = new TeraCompare(spark, dummyExpression, df1, df2)
 
     val output = compare.compare()
@@ -51,6 +53,6 @@ class TeradiffTest extends TestCase {
   def testExpression() = {
     val builder = new ExpressionBuilder()
     val fields = "time,symbol,sequence,price"
-    assertEquals("concat_ws('%s',time,symbol,sequence,price) as key".format('\001'), builder.getExpression(fields, "key"))
+    assertEquals("concat_ws('%s',time,symbol,sequence,price) as key".format('\001'), builder.getExpression(fields, "", "key"))
   }
 }

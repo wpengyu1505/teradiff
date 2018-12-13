@@ -26,6 +26,8 @@ object TeradiffRunner {
   @Option(name = "--leftValue", required = false, usage = "left value fields") var leftValue:String = null
   @Option(name = "--rightKey", required = false, usage = "right key fields") var rightKey:String = null
   @Option(name = "--rightValue", required = false, usage = "right value fields") var rightValue:String = null
+  @Option(name = "--leftIgnores", required = false, usage = "left ignore fields") var leftIgnores:String = ""
+  @Option(name = "--rightIgnores", required = false, usage = "right ignore fields") var rightIgnores:String = ""
   @Option(name = "--leftDelimiter", required = false, usage = "left csv delimiter") var leftDelimiter:String = ","
   @Option(name = "--rightDelimiter", required = false, usage = "right csv delimiter") var rightDelimiter:String = ","
   @Option(name = "--leftWithHeader", required = false, usage = "left csv with header") var leftWithHeader:Boolean = false
@@ -58,7 +60,7 @@ object TeradiffRunner {
     properties.load(new FileInputStream(propertyFilename))
 
     val expression = new ExpressionBuilder(leftKey, leftValue, rightKey, rightValue,
-      leftDelimiter, rightDelimiter, leftWithHeader, rightWithHeader)
+      leftIgnores, rightIgnores, leftDelimiter, rightDelimiter, leftWithHeader, rightWithHeader)
 
     if (sourceType == "hive") {
       df1 = spark.read.table(source1)
