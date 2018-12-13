@@ -20,8 +20,8 @@ object TeradiffRunner {
   @Option(name = "--propertyFile", required = true, usage = "property file path") var propertyFilename:String = null
   @Option(name = "--outputFile", required = true, usage = "summary file path") var outputFile:String = null
   @Option(name = "--runMode", required = false, usage = "local or yarn") var runMode:String = "local"
-  @Option(name = "--leftSchema", required = false, usage = "left data schema") var leftSchema:String = null
-  @Option(name = "--rightSchema", required = false, usage = "right data schema") var rightSchema:String = null
+  @Option(name = "--leftSchema", required = false, usage = "left data schema") var leftSchemaStr:String = ""
+  @Option(name = "--rightSchema", required = false, usage = "right data schema") var rightSchemaStr:String = ""
   @Option(name = "--leftKey", required = false, usage = "left key fields") var leftKey:String = null
   @Option(name = "--leftValue", required = false, usage = "left value fields") var leftValue:String = null
   @Option(name = "--rightKey", required = false, usage = "right key fields") var rightKey:String = null
@@ -67,8 +67,8 @@ object TeradiffRunner {
       df2 = spark.read.table(source2)
     } else if (sourceType == "csv") {
 
-      val leftSchema = expression.getLeftSchema()
-      val rightSchema = expression.getRightSchema()
+      val leftSchema = expression.getSchema(leftSchemaStr)
+      val rightSchema = expression.getSchema(rightSchemaStr)
       val leftDelimiter = expression.getLeftDelimiter()
       val rightDelimiter = expression.getRightDelimiter()
 
