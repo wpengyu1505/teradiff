@@ -25,4 +25,6 @@ A tool which compares 2 large scale datasets based on Spark
 - rightKey: Comma seperated list of columns to be the unique ID of the right source
 - leftValue: Comma seperated list of columns to be compared for the left source
 - rightValue: Comma seperated list of columns to be compared for the right source
+- leftIgnores: Comma seperated list of columns to be ignored for left
+- rightIgnores: Comma seperated list of columns to be ignored for the right
 * List of columns between left and right must follow the same order
