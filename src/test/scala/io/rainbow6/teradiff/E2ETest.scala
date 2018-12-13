@@ -8,15 +8,24 @@ class E2ETest extends TestCase {
 
   @Test
   def test(): Unit = {
-    val source1 = "src/test/resources/data1_header.txt"
-    val source2 = "src/test/resources/data2_header.txt"
-    val sourceType = "csv"
-    val propertyFilename = "src/test/resources/test.properties"
-    val outputFile = "target/testSummary.txt"
-    val mode = "local"
-    var partitions = "1"
 
-    val args = Array[String](source1, source2, sourceType, propertyFilename, outputFile, mode, partitions)
+    val args = Array[String](
+      "--left", "src/test/resources/data1_header.txt",
+      "--right", "src/test/resources/data2_header.txt",
+      "--sourceType", "csv",
+      "--propertyFile", "src/test/resources/test.properties",
+      "--outputFile", "target/testSummary.txt",
+      "--runMode", "local",
+      "--partitions", "1",
+      "--leftDelimiter", "|",
+      "--rightDelimiter", "|",
+      "--leftKey", "id",
+      "--leftValue", "id,col1,col2,col3",
+      "--rightKey", "id",
+      "--rightValue", "id,col1,col2,col3",
+      "--rightWithHeader",
+      "--leftWithHeader"
+    )
 
     TeradiffRunner.main(args)
   }
