@@ -128,6 +128,14 @@ object TeradiffRunner {
     val output = compare.compare()
 
     val writer = new PrintWriter(outputFile)
+    compare.writeLine("============= Sources ==============", writer)
+    compare.writeLine("LHS (Left side): %s".format(source1), writer)
+    compare.writeLine("RHS (Right side): %s".format(source2), writer)
+
+    compare.writeLine("============= Total count ==============", writer)
+    compare.writeLine("LHS count:  %s".format(df1.count), writer)
+    compare.writeLine("RHS count:  %s".format(df2.count), writer)
+
     compare.analyzeResult(output, writer)
 
   }
