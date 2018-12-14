@@ -28,3 +28,7 @@ A tool which compares 2 large scale datasets based on Spark
 - leftIgnores: Comma seperated list of columns to be ignored for left
 - rightIgnores: Comma seperated list of columns to be ignored for the right
 * List of columns between left and right must follow the same order
+
+# Example delimiter options:
+Pipe:   --leftDelimiter '|'
+Ctrl-A: --leftDelimiter $'\001'
