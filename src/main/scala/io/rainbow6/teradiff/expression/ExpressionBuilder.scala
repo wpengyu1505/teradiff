@@ -3,7 +3,7 @@ package io.rainbow6.teradiff.expression
 import java.util.Properties
 
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.types.{DecimalType, StringType, StructField, StructType}
 
 import scala.collection.immutable.Map
 import scala.collection.mutable.ListBuffer
@@ -128,7 +128,7 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
   }
 
   def schemaToString(schema:StructType):String = {
-    schema.fieldNames.mkString(",")
+    schema.fieldNames.mkString(",").toLowerCase
   }
 
   def analyze(df1:DataFrame, df2:DataFrame) = {
@@ -169,6 +169,24 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
     println("leftIgnores: %s".format(leftIgnores))
     println("rightIgnores %s".format(rightIgnores))
     println("=======================================")
+  }
+
+  private def compareSchema() = {
+
+    val fields1 = leftSchema.fields
+    val fields2 = rightSchema.fields
+
+    if (fields1.length != fields2.length) {
+      println("ERROR: Number of fields mismatch: left %s, right %s".format(fields1.length, fields2.length))
+    }
+
+    fields1.foreach(v => {
+      val tp = v.dataType
+      if (tp.isInstanceOf[DecimalType]) {
+        val precision = tp.asInstanceOf[DecimalType].precision
+        val scale = tp.asInstanceOf[DecimalType].scale
+      }
+    })
   }
 
   def getLeftKeyExpr(): String = {

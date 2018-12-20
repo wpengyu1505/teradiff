@@ -59,8 +59,10 @@ object TeradiffRunner {
     val properties = new Properties()
     properties.load(new FileInputStream(propertyFilename))
 
-    val expression = new ExpressionBuilder(leftKey, leftValue, rightKey, rightValue,
-      leftIgnores, rightIgnores, leftDelimiter, rightDelimiter, leftWithHeader, rightWithHeader)
+    val expression = new ExpressionBuilder(leftKey.toLowerCase, leftValue.toLowerCase,
+      rightKey.toLowerCase, rightValue.toLowerCase,
+      leftIgnores.toLowerCase, rightIgnores.toLowerCase,
+      leftDelimiter, rightDelimiter, leftWithHeader, rightWithHeader)
 
     if (sourceType == "hive") {
       df1 = spark.read.table(source1)

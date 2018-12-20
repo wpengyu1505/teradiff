@@ -7,6 +7,7 @@ import io.rainbow6.teradiff.expression.{Constants, ExpressionBuilder}
 import org.apache.commons.lang.StringUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.Accumulator
+import org.apache.spark.sql.types.{DecimalType, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.util.LongAccumulator
 
