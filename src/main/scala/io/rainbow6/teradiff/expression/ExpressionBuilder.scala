@@ -105,8 +105,8 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
   def getFieldMap(fieldList:String, ignoreList:String):Map[Int, String] = {
 
     val list = new ListBuffer[(Int, String)]
-    val fields = fieldList.split(",")
-    val ignores = ignoreList.split(",")
+    val fields = fieldList.toLowerCase.split(",")
+    val ignores = ignoreList.toLowerCase.split(",")
     var index = 0
     fields.foreach(v => {
       if (!ignores.contains(v)) {
@@ -120,7 +120,7 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
   def getSchema(fieldList:String): StructType = {
 
     var schema = new StructType()
-    fieldList.split(",").foreach(v => {
+    fieldList.toLowerCase.split(",").foreach(v => {
       schema = schema.add((StructField(v, StringType, true)))
     })
 

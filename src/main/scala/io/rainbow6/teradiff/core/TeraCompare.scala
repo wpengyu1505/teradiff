@@ -121,14 +121,14 @@ class TeraCompare (spark:SparkSession, expression:ExpressionBuilder, leftDf:Data
   }
 
   def formatResultKey(fields:String): String = {
-    fields.replaceAll(Constants.delimiter, "\\|")
+    fields.replaceAll(Constants.delimiter, Constants.delimRep)
   }
 
   def writeLine(line:String, writer:PrintWriter) = {
     if (writer != null) {
-      writer.println(line)
+      writer.println(line.replaceAll(Constants.delimiter, Constants.delimRep))
     } else {
-      println(line)
+      println(line.replaceAll(Constants.delimiter, Constants.delimRep))
     }
   }
 
