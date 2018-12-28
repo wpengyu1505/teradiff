@@ -94,7 +94,8 @@ class ExpressionBuilder(var leftKeyMap:Map[Int, String],
     sb.append("concat_ws('%s'".format(Constants.delimiter))
     cols.foreach(v => {
       if (!ignores.contains(v)) {
-        sb.append(",%s".format(v))
+        val colRep = "coalesce(cast(%s as string), '')".format(v)
+        sb.append(",%s".format(colRep))
       }
     })
     sb.append(") as %s".format(columnName))
