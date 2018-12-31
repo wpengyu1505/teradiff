@@ -95,6 +95,22 @@ class TeraCompare (spark:SparkSession, expression:ExpressionBuilder, leftDf:Data
     val rightOnlyCount = result._3.value
     val diffCount = result._4.value
 
+    val leftCount = leftDf.count
+    val rightCount = rightDf.count
+
+    val sum = leftOnlyCount + rightOnlyCount
+    val leftPercentage = (1 - sum.toFloat / leftCount.toFloat) * 100
+    val rightPercentage = (1 - sum.toFloat / rightCount.toFloat) * 100
+
+
+
+    writeLine("============= Total count ==============", writer)
+    writeLine("LHS count:  %s".format(leftCount), writer)
+    writeLine("RHS count:  %s".format(rightCount), writer)
+
+    writeLine("============= Percentage ==============", writer)
+    writeLine("LHS Match: %s".format(leftPercentage + "%"), writer)
+    writeLine("RHS Match: %s".format(rightPercentage + "%"), writer)
     writeLine("============= Stats =============", writer)
     writeLine("LHS only:   %s".format(leftOnlyCount), writer)
     writeLine("RHS only:   %s".format(rightOnlyCount), writer)

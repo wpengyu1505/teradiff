@@ -132,9 +132,9 @@ object TeradiffRunner {
     compare.writeLine("LHS (Left side): %s".format(source1), writer)
     compare.writeLine("RHS (Right side): %s".format(source2), writer)
 
-    compare.writeLine("============= Total count ==============", writer)
-    compare.writeLine("LHS count:  %s".format(df1.count), writer)
-    compare.writeLine("RHS count:  %s".format(df2.count), writer)
+    compare.writeLine("============= Ignores ==============", writer)
+    compare.writeLine("LHS (Left side): %s".format(leftIgnores), writer)
+    compare.writeLine("RHS (Right side): %s".format(rightIgnores), writer)
 
     compare.analyzeResult(output, writer)
 
