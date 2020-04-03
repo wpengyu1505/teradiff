@@ -16,7 +16,8 @@ object TeradiffRunner {
   // Use args4j
   @Option(name = "--left", required = true, usage = "left source") var source1:String = null
   @Option(name = "--right", required = true, usage = "right source") var source2:String = null
-  @Option(name = "--sourceType", required = true, usage = "type of data (rdbms/csv/hive)") var sourceType:String = null
+  @Option(name = "--sourceType1", required = true, usage = "left type of data (rdbms/csv/hive)") var sourceType1:String = null
+  @Option(name = "--sourceType2", required = true, usage = "right type of data (rdbms/csv/hive)") var sourceType2:String = null
   @Option(name = "--propertyFile", required = true, usage = "property file path") var propertyFilename:String = null
   @Option(name = "--outputFile", required = true, usage = "summary file path") var outputFile:String = null
   @Option(name = "--runMode", required = false, usage = "local or yarn") var runMode:String = "local"
@@ -47,14 +48,11 @@ object TeradiffRunner {
     val conf = new SparkConf().setAppName("TeraDiff")
     if (runMode == "local") {
       conf.setMaster("local")
-      spark = SparkSession.builder.config(conf).getOrCreate()
+      spark = SparkSession.builder.config(conf).config("spark.driver.bindAddress", "localhost").getOrCreate()
     } else {
       spark = SparkSession.builder.config(conf).config("spark.sql.warehouse.dir", "/user/hive/warehouse/").enableHiveSupport().getOrCreate()
     }
     spark.sql("set spark.sql.shuffle.partitions=%s".format(partitions))
-
-    var df1 = null:DataFrame
-    var df2 = null:DataFrame
 
     val properties = new Properties()
     properties.load(new FileInputStream(propertyFilename))
@@ -62,63 +60,8 @@ object TeradiffRunner {
     val expression = new ExpressionBuilder(leftKey, leftValue, rightKey, rightValue,
       leftIgnores, rightIgnores, leftDelimiter, rightDelimiter, leftWithHeader, rightWithHeader)
 
-    if (sourceType == "hive") {
-      df1 = spark.read.table(source1)
-      df2 = spark.read.table(source2)
-    } else if (sourceType == "csv") {
-
-      val leftSchema = expression.getSchema(leftSchemaStr)
-      val rightSchema = expression.getSchema(rightSchemaStr)
-      val leftDelimiter = expression.getLeftDelimiter()
-      val rightDelimiter = expression.getRightDelimiter()
-
-      if (expression.leftWithHeader()) {
-        df1 = spark.read.format("com.databricks.spark.csv")
-          .option("header", true)
-          .option("delimiter", leftDelimiter)
-          .load(source1)
-      } else {
-        df1 = spark.read.format("com.databricks.spark.csv")
-          .option("header", false)
-          .option("delimiter", leftDelimiter)
-          .schema(leftSchema)
-          .load(source1)
-      }
-
-      if (expression.rightWithHeader()) {
-        df2 = spark.read.format("com.databricks.spark.csv")
-          .option("header", true)
-          .option("delimiter", rightDelimiter)
-          .load(source2)
-      } else {
-        df2 = spark.read.format("com.databricks.spark.csv")
-          .option("header", false)
-          .option("delimiter", rightDelimiter)
-          .schema(rightSchema)
-          .load(source2)
-      }
-
-
-    } else if (sourceType == "rdbms") {
-
-      val leftConnectionProperties = new Properties()
-      leftConnectionProperties.put("user", properties.getProperty("LEFT_USERNAME"))
-      leftConnectionProperties.put("password", properties.getProperty("LEFT_PASSWORD"))
-      leftConnectionProperties.setProperty("Driver", properties.getProperty("LEFT_DRIVER_CLASS"))
-      df1 = spark.read.jdbc(properties.getProperty("LEFT_CONNECTION"), source1, leftConnectionProperties)
-
-      val rightConnectionProperties = new Properties()
-      rightConnectionProperties.put("user", properties.getProperty("RIGHT_USERNAME"))
-      rightConnectionProperties.put("password", properties.getProperty("RIGHT_PASSWORD"))
-      rightConnectionProperties.setProperty("Driver", properties.getProperty("RIGHT_DRIVER_CLASS"))
-      df2 = spark.read.jdbc(properties.getProperty("RIGHT_CONNECTION"), source2, rightConnectionProperties)
-
-      //Class.forName(properties.getProperty("LEFT_DRIVER_CLASS"))
-
-    } else {
-      System.err.println("ERROR: Source type %s not supported".format(sourceType))
-      System.exit(1)
-    }
+    val df1 = getLeftDataFrame(spark, expression, properties)
+    val df2 = getRightDataFrame(spark, expression, properties)
 
     expression.analyze(df1, df2)
 
@@ -138,5 +81,67 @@ object TeradiffRunner {
 
     compare.analyzeResult(output, writer)
 
+  }
+
+  def getLeftDataFrame(spark:SparkSession, expression:ExpressionBuilder, properties:Properties): DataFrame = {
+    if (sourceType1 == "hive") {
+      spark.read.table(source1)
+    } else if (sourceType1 == "csv") {
+
+      val leftSchema = expression.getSchema(leftSchemaStr)
+      val leftDelimiter = expression.getLeftDelimiter()
+
+      if (expression.leftWithHeader()) {
+        spark.read.format("com.databricks.spark.csv")
+          .option("header", true)
+          .option("delimiter", leftDelimiter)
+          .load(source1)
+      } else {
+        spark.read.format("com.databricks.spark.csv")
+          .option("header", false)
+          .option("delimiter", leftDelimiter)
+          .schema(leftSchema)
+          .load(source1)
+      }
+    } else if (sourceType1 == "rdbms") {
+      val leftConnectionProperties = new Properties()
+      leftConnectionProperties.put("user", properties.getProperty("LEFT_USERNAME"))
+      leftConnectionProperties.put("password", properties.getProperty("LEFT_PASSWORD"))
+      leftConnectionProperties.setProperty("Driver", properties.getProperty("LEFT_DRIVER_CLASS"))
+      spark.read.jdbc(properties.getProperty("LEFT_CONNECTION"), source1, leftConnectionProperties)
+    } else {
+      throw new RuntimeException(s"ERROR: Source type ${sourceType1} not supported")
+    }
+  }
+
+  def getRightDataFrame(spark:SparkSession, expression:ExpressionBuilder, properties:Properties): DataFrame = {
+    if (sourceType2 == "hive") {
+      spark.read.table(source2)
+    } else if (sourceType2 == "csv") {
+
+      val rightSchema = expression.getSchema(rightSchemaStr)
+      val rightDelimiter = expression.getRightDelimiter()
+
+      if (expression.rightWithHeader()) {
+        spark.read.format("com.databricks.spark.csv")
+          .option("header", true)
+          .option("delimiter", rightDelimiter)
+          .load(source2)
+      } else {
+        spark.read.format("com.databricks.spark.csv")
+          .option("header", false)
+          .option("delimiter", rightDelimiter)
+          .schema(rightSchema)
+          .load(source2)
+      }
+    } else if (sourceType2 == "rdbms") {
+      val rightConnectionProperties = new Properties()
+      rightConnectionProperties.put("user", properties.getProperty("RIGHT_USERNAME"))
+      rightConnectionProperties.put("password", properties.getProperty("RIGHT_PASSWORD"))
+      rightConnectionProperties.setProperty("Driver", properties.getProperty("RIGHT_DRIVER_CLASS"))
+      spark.read.jdbc(properties.getProperty("RIGHT_CONNECTION"), source2, rightConnectionProperties)
+    } else {
+      throw new RuntimeException(s"ERROR: Source type ${sourceType2} not supported")
+    }
   }
 }

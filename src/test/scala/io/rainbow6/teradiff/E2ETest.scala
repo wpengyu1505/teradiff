@@ -12,7 +12,8 @@ class E2ETest extends TestCase {
     val args = Array[String](
       "--left", "src/test/resources/data1_header.txt",
       "--right", "src/test/resources/data2_header.txt",
-      "--sourceType", "csv",
+      "--sourceType1", "csv",
+      "--sourceType2", "csv",
       "--propertyFile", "src/test/resources/test.properties",
       "--outputFile", "target/testSummary.txt",
       "--runMode", "local",
