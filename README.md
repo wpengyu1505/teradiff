@@ -15,6 +15,13 @@ A tool which compares 2 large scale datasets based on Spark
 
 # Arguments explained
 
+- left: Left source
+- right: Right source
+- sourceType1: Left source type (csv/rdbms/json/hive/parquet)
+- sourceType2: Right source type (csv/rdbms/json/hive/parquet)
+- propertyFile: JDBC property (only applies to rdbms option)
+- runMode: local or cluster
+- partitions: Level of parallelism (for high volume)
 - leftSchema: Comma seperated list of columns of the left source
 - rightSchema: Comma seperated list of columns of the right source
 - leftDelimiter: Only applies to csv, default is comma
