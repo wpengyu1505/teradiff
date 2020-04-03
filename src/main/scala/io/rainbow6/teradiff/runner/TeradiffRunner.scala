@@ -16,8 +16,8 @@ object TeradiffRunner {
   // Use args4j
   @Option(name = "--left", required = true, usage = "left source") var source1:String = null
   @Option(name = "--right", required = true, usage = "right source") var source2:String = null
-  @Option(name = "--sourceType1", required = true, usage = "left type of data (rdbms/csv/hive)") var sourceType1:String = null
-  @Option(name = "--sourceType2", required = true, usage = "right type of data (rdbms/csv/hive)") var sourceType2:String = null
+  @Option(name = "--sourceType1", required = true, usage = "left type of data (rdbms/csv/hive/json/parquet)") var sourceType1:String = null
+  @Option(name = "--sourceType2", required = true, usage = "right type of data (rdbms/csv/hive/json/parquet)") var sourceType2:String = null
   @Option(name = "--propertyFile", required = true, usage = "property file path") var propertyFilename:String = null
   @Option(name = "--outputFile", required = true, usage = "summary file path") var outputFile:String = null
   @Option(name = "--runMode", required = false, usage = "local or yarn") var runMode:String = "local"
@@ -103,6 +103,10 @@ object TeradiffRunner {
           .schema(leftSchema)
           .load(source1)
       }
+    } else if (sourceType1 == "json") {
+      spark.read.json(source1)
+    } else if (sourceType1 == "parquet") {
+      spark.read.parquet(source1)
     } else if (sourceType1 == "rdbms") {
       val leftConnectionProperties = new Properties()
       leftConnectionProperties.put("user", properties.getProperty("LEFT_USERNAME"))
@@ -134,6 +138,10 @@ object TeradiffRunner {
           .schema(rightSchema)
           .load(source2)
       }
+    } else if (sourceType2 == "json") {
+      spark.read.json(source2)
+    } else if (sourceType2 == "parquet") {
+      spark.read.parquet(source2)
     } else if (sourceType2 == "rdbms") {
       val rightConnectionProperties = new Properties()
       rightConnectionProperties.put("user", properties.getProperty("RIGHT_USERNAME"))
