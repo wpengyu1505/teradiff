@@ -9,6 +9,7 @@ import io.rainbow6.teradiff.expression.ExpressionBuilder
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.SparkConf
 import io.rainbow6.teradiff.core.TeraCompare
+import org.apache.spark.sql.types.StructType
 import org.kohsuke.args4j.{CmdLineParser, Option}
 
 object TeradiffRunner {
@@ -33,6 +34,7 @@ object TeradiffRunner {
   @Option(name = "--rightDelimiter", required = false, usage = "right csv delimiter") var rightDelimiter:String = ","
   @Option(name = "--leftWithHeader", required = false, usage = "left csv with header") var leftWithHeader:Boolean = false
   @Option(name = "--rightWithHeader", required = false, usage = "right csv with header") var rightWithHeader:Boolean = false
+  @Option(name = "--syncSchema", required = false, usage = "left or right") var syncSchema:String = null
   @Option(name = "--partitions", required = false, usage = "num of partitions") var partitions:Int = 1
 
   def main(args:Array[String]): Unit = {
@@ -60,8 +62,19 @@ object TeradiffRunner {
     val expression = new ExpressionBuilder(leftKey, leftValue, rightKey, rightValue,
       leftIgnores, rightIgnores, leftDelimiter, rightDelimiter, leftWithHeader, rightWithHeader)
 
-    val df1 = getLeftDataFrame(spark, expression, properties)
-    val df2 = getRightDataFrame(spark, expression, properties)
+    var df1 = getLeftDataFrame(spark, expression, properties)
+    var df2 = getRightDataFrame(spark, expression, properties)
+    val schema1 = df1.schema
+    val schema2 = df2.schema
+
+    // SyncSchema
+    if (syncSchema != null) {
+      if (syncSchema == "left") {
+        df2 = getRightDataFrame(spark, expression, properties, schema1)
+      } else if (syncSchema == "right") {
+        df1 = getRightDataFrame(spark, expression, properties, schema2)
+      }
+    }
 
     expression.analyze(df1, df2)
 
@@ -83,7 +96,7 @@ object TeradiffRunner {
 
   }
 
-  def getLeftDataFrame(spark:SparkSession, expression:ExpressionBuilder, properties:Properties): DataFrame = {
+  def getLeftDataFrame(spark:SparkSession, expression:ExpressionBuilder, properties:Properties, schema: StructType = null): DataFrame = {
     if (sourceType1 == "hive") {
       spark.read.table(source1)
     } else if (sourceType1 == "csv") {
@@ -104,7 +117,11 @@ object TeradiffRunner {
           .load(source1)
       }
     } else if (sourceType1 == "json") {
-      spark.read.json(source1)
+      if (schema == null) {
+        spark.read.json(source1)
+      } else {
+        spark.read.schema(schema).json(source1)
+      }
     } else if (sourceType1 == "parquet") {
       spark.read.parquet(source1)
     } else if (sourceType1 == "rdbms") {
@@ -118,7 +135,7 @@ object TeradiffRunner {
     }
   }
 
-  def getRightDataFrame(spark:SparkSession, expression:ExpressionBuilder, properties:Properties): DataFrame = {
+  def getRightDataFrame(spark:SparkSession, expression:ExpressionBuilder, properties:Properties, schema: StructType = null): DataFrame = {
     if (sourceType2 == "hive") {
       spark.read.table(source2)
     } else if (sourceType2 == "csv") {
@@ -139,7 +156,11 @@ object TeradiffRunner {
           .load(source2)
       }
     } else if (sourceType2 == "json") {
-      spark.read.json(source2)
+      if (schema == null) {
+        spark.read.json(source2)
+      } else {
+        spark.read.schema(schema).json(source2)
+      }
     } else if (sourceType2 == "parquet") {
       spark.read.parquet(source2)
     } else if (sourceType2 == "rdbms") {
