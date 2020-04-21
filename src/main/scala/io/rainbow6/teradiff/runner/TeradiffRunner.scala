@@ -72,7 +72,7 @@ object TeradiffRunner {
       if (syncSchema == "left") {
         df2 = getRightDataFrame(spark, expression, properties, schema1)
       } else if (syncSchema == "right") {
-        df1 = getRightDataFrame(spark, expression, properties, schema2)
+        df1 = getLeftDataFrame(spark, expression, properties, schema2)
       }
     }
 
